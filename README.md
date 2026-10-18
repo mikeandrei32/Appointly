@@ -4,7 +4,7 @@ A clinic appointment booking portfolio project using React (JavaScript), ASP.NET
 
 ## Current status
 
-Phase 1 is implemented: frontend foundation, database-backed health endpoint, initial clinic schedule migration, and development OpenAPI specification. Authentication, booking, admin management, and patient dashboards are not implemented yet. This is not a production medical records system.
+Phases 1 and 2 are implemented: frontend foundation, database-backed health endpoint, migrations, development OpenAPI, patient registration/login/logout, profile, Patient/Admin authorization, CSRF protection, and development-only admin setup. Booking, appointment management, and dashboards are not implemented yet. This is not a production medical records system.
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ dotnet ef database update --project backend/Appointly.Api
 npm --prefix frontend ci
 ```
 
-The migration creates backend/Appointly.Api/appointly.db and seeds seven weekday schedule rows. Monday-Friday are open 09:00-17:00; weekends are closed. Times represent Asia/Manila clinic time. There are no patient records or admin credentials.
+The migration creates backend/Appointly.Api/appointly.db and seeds seven weekday schedule rows. Monday-Friday are open 09:00-17:00; weekends are closed. Times represent Asia/Manila clinic time. No patient records or administrator credentials are seeded by migrations. Identity tables are added by the Phase 2 migration. An explicitly configured development administrator can be seeded at startup.
 
 ## Run locally
 
@@ -67,7 +67,7 @@ dotnet dev-certs https --trust
 dotnet run --project backend/Appointly.Api --launch-profile https
 ```
 
-The HTTPS profile also retains HTTP for the local Vite proxy. Production enables HTTPS redirection and HSTS. Cookie authentication and CSRF protection are planned for Phase 2; no authenticated endpoints exist in Phase 1.
+The HTTPS profile also retains HTTP for the local Vite proxy. Production enables HTTPS redirection and HSTS. Identity cookie authentication and CSRF protection are implemented. Production cookies require HTTPS. Prefer one origin for deployment; cross-site cookie hosting is not configured. See docs/phase-2.md for authentication details.
 
 ## Architecture and learning guide
 
@@ -91,7 +91,7 @@ Invoke-RestMethod http://localhost:5173/api/health
 Invoke-RestMethod http://localhost:5173/openapi/v1.json
 ```
 
-Verified during Phase 1: migration generation/application, backend build with zero warnings/errors, frontend lint/build, HTTP 200 for the frontend, healthy responses directly and through the proxy, and development OpenAPI containing /api/health. Browser rendering and the connected status were inspected. A full mobile/device matrix and automated xUnit tests have not yet been added.
+Verified during Phase 1: migration generation/application, backend build with zero warnings/errors, frontend lint/build, HTTP 200 for the frontend, healthy responses directly and through the proxy, and development OpenAPI containing /api/health. Browser rendering and the connected status were inspected. Phase 2 adds ten SQLite-backed xUnit integration cases. A full mobile/device matrix has not yet been verified.
 
 ## Migrations
 
@@ -104,9 +104,13 @@ dotnet ef database update --project backend/Appointly.Api
 
 Commit migration source files, not the local database. The application does not silently apply migrations on startup.
 
-## Next phases
+## Authentication setup and verification
 
-2. Identity, Patient/Admin roles, CSRF, authentication UI, and development admin configuration.
+See [Phase 2 guide](docs/phase-2.md) for API routes, development admin setup, tests, manual verification, and class responsibilities.
+
+## Roadmap
+
+2. Complete: Identity, Patient/Admin roles, CSRF, authentication UI, and development admin configuration.
 3. Appointment booking, availability, cancellation, unique slot reservations, and concurrency tests.
 4. Administration and schedule conflict handling.
 5. Patient dashboard and history.
