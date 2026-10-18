@@ -1,0 +1,16 @@
+node_modules/
+dist/
+bin/
+obj/
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+*.db
+*.db-shm
+*.db-wal
+.vs/
+.idea/
+*.user
+Thumbs.db
+.DS_Store
