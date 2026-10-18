@@ -1,8 +1,26 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './context/AuthProvider'
+import RequireAuth from './components/RequireAuth'
+import AccountLayout from './layouts/AccountLayout'
 import FoundationPage from './pages/FoundationPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import AccountPage from './pages/AccountPage'
+import AdminAccessPage from './pages/AdminAccessPage'
+
 export default function App() {
-  return <BrowserRouter><Routes>
+  return <BrowserRouter><AuthProvider><Routes>
     <Route path="/" element={<FoundationPage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/register" element={<RegisterPage />} />
+    <Route element={<RequireAuth />}>
+      <Route element={<AccountLayout />}>
+        <Route path="/account" element={<AccountPage />} />
+        <Route element={<RequireAuth role="Admin" />}>
+          <Route path="/admin" element={<AdminAccessPage />} />
+        </Route>
+      </Route>
+    </Route>
     <Route path="*" element={<main className="p-10"><h1 className="mb-4 text-2xl font-bold">Page not found</h1><Link to="/" className="text-blue-700 underline">Return to Appointly</Link></main>} />
-  </Routes></BrowserRouter>
+  </Routes></AuthProvider></BrowserRouter>
 }

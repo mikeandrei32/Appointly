@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/backend/">
     <Project Path="backend/Appointly.Api/Appointly.Api.csproj" />
+    <Project Path="backend/Appointly.Tests/Appointly.Tests.csproj" />
   </Folder>
 </Solution>
