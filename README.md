@@ -4,7 +4,7 @@ A clinic appointment booking portfolio project using React (JavaScript), ASP.NET
 
 ## Current status
 
-Phases 1-5 are implemented: frontend foundation, database-backed health endpoint, migrations, development OpenAPI, patient registration/login/logout, profile, Patient/Admin authorization, CSRF protection, development-only admin setup, appointment availability, booking, patient cancellation, administrator dashboard, appointment management, weekly hours, blocked dates, and a patient dashboard with upcoming visits and appointment history. This is not a production medical records system.
+Phases 1-6 are implemented: frontend foundation, database-backed health endpoint, migrations, development OpenAPI, patient registration/login/logout, profile, Patient/Admin authorization, CSRF protection, development-only admin setup, appointment availability, booking, patient cancellation, administrator dashboard, appointment management, weekly hours, blocked dates, and a patient dashboard with upcoming visits and appointment history. Phase 6 adds browser regression tests and responsive/accessibility fixes. This is not a production medical records system.
 
 ## Prerequisites
 
@@ -94,7 +94,24 @@ Invoke-RestMethod http://localhost:5173/api/health
 Invoke-RestMethod http://localhost:5173/openapi/v1.json
 ```
 
-Phase 5 verification: 69 SQLite-backed integration cases pass (including all 59 previous-phase cases), frontend lint/build pass, and two frontend timezone tests pass. Backend checks use `dotnet test --artifacts-path "$env:TEMP/appointly-phase5-checks"` to avoid locking the executable of an already running API. No development servers were started or stopped; browser interaction and the mobile/device matrix remain manual checks. Phase 5 requires no new database migration.
+Phase 6 verification: 69 SQLite-backed integration cases, two frontend timezone tests, and 20 Chromium browser cases pass. Frontend lint/build and whitespace checks pass. Browser cases run against a temporary production preview at port 4178 with mocked API responses; backend integration cases exercise real Identity and SQLite. Existing development servers and application data are untouched. No new migration is required.
+
+Install the browser test dependency and Chromium once after pulling:
+
+```powershell
+npm --prefix frontend ci
+Push-Location frontend
+npx playwright install chromium
+Pop-Location
+```
+
+Run the full check sequence from the repository root:
+
+```powershell
+.\scripts\Test-Appointly.ps1
+```
+
+The script stops on the first failed check. Browser tests cover desktop and 320-pixel mobile viewports; Firefox, WebKit, and physical devices remain manual checks.
 
 ## Migrations
 
@@ -117,13 +134,15 @@ See [Phase 4 guide](docs/phase-4.md) for administrator management, conflict rule
 
 See [Phase 5 guide](docs/phase-5.md) for the patient dashboard, upcoming/history rules, modified files, and manual verification.
 
+See [Phase 6 guide](docs/phase-6.md) for test coverage, responsive fixes, browser-test setup, and manual verification.
+
 ## Roadmap
 
 2. Complete: Identity, Patient/Admin roles, CSRF, authentication UI, and development admin configuration.
 3. Complete: appointment booking, availability, cancellation, unique slot reservations, and concurrency tests.
 4. Complete: administrator dashboard, appointment status management, weekly hours, blocked dates, and schedule conflict handling.
 5. Complete: patient dashboard, upcoming visits, history, navigation, and loading/empty/error feedback.
-6. SQLite-backed integration tests and responsive polish.
+6. Complete: backend regression verification, browser tests, responsive fixes, and keyboard-focus polish.
 7. Portfolio documentation and screenshots of completed features.
 
 The application has not been deployed. Never enter real patient data into this demonstration.

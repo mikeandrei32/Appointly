@@ -30,7 +30,7 @@ export default function FoundationPage() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
           <Brand />
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Development · Phase 5</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Development · Phase 6</span>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-14 md:py-24">
