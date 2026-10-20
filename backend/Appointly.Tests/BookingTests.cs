@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Appointly.Api.Data;
+using Appointly.Api.DTOs;
 using Appointly.Api.Models;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -251,12 +252,105 @@ public sealed class BookingTests
         Assert.Equal(HttpStatusCode.OK, (await Send(patient, HttpMethod.Patch, $"/api/appointments/{id}/cancel")).StatusCode);
     }
 
+    [Theory]
+    [InlineData(AppointmentStatus.Pending, -1, true, true)]
+    [InlineData(AppointmentStatus.Pending, 0, true, false)]
+    [InlineData(AppointmentStatus.Pending, 15, true, false)]
+    [InlineData(AppointmentStatus.Pending, 30, false, false)]
+    [InlineData(AppointmentStatus.Pending, 60, false, false)]
+    [InlineData(AppointmentStatus.Confirmed, -1, true, true)]
+    [InlineData(AppointmentStatus.Completed, -1, false, false)]
+    [InlineData(AppointmentStatus.Cancelled, -1, false, false)]
+    public async Task Patient_overview_partitions_at_visit_end_without_changing_status(
+        AppointmentStatus status, int minutesAfterStart, bool isUpcoming, bool canCancel)
+    {
+        var clock = new TestClock();
+        using var factory = new AuthFactory(timeProvider: clock);
+        using var patient = await Patient(factory);
+        var id = await BookId(patient);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var database = scope.ServiceProvider.GetRequiredService<AppointlyDbContext>();
+            (await database.Appointments.SingleAsync()).Status = status;
+            await database.SaveChangesAsync();
+        }
+        clock.Now = DateTimeOffset.Parse("2030-01-07T01:00:00Z").AddMinutes(minutesAfterStart);
+        var overview = (await patient.GetFromJsonAsync<PatientOverviewResponse>("/api/appointments/my/overview"))!;
+        var item = Assert.Single(isUpcoming ? overview.Upcoming : overview.History);
+        Assert.Empty(isUpcoming ? overview.History : overview.Upcoming);
+        Assert.Equal(id, item.Id);
+        Assert.Equal(status.ToString(), item.Status);
+        Assert.Equal(canCancel, item.CanCancel);
+        using var check = factory.Services.CreateScope();
+        Assert.Equal(status, (await check.ServiceProvider.GetRequiredService<AppointlyDbContext>()
+            .Appointments.SingleAsync()).Status);
+    }
+
+    [Fact]
+    public async Task Patient_overview_orders_lists_and_never_exposes_another_patient()
+    {
+        using var factory = new AuthFactory(timeProvider: new TestClock());
+        using var patient = await Patient(factory);
+        using var other = await Patient(factory);
+        var empty = (await patient.GetFromJsonAsync<PatientOverviewResponse>("/api/appointments/my/overview"))!;
+        Assert.Empty(empty.Upcoming);
+        Assert.Empty(empty.History);
+        var profile = await patient.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        var otherProfile = await other.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        using (var scope = factory.Services.CreateScope())
+        {
+            var database = scope.ServiceProvider.GetRequiredService<AppointlyDbContext>();
+            var start = DateTime.Parse("2030-01-07T00:00:00Z").ToUniversalTime();
+            foreach (var offset in new[] { 180, -60, 60, -180 })
+                database.Appointments.Add(new Appointment {
+                    PatientId = profile.GetProperty("id").GetString()!,
+                    AppointmentDateTimeUtc = start.AddMinutes(offset),
+                    Status = AppointmentStatus.Confirmed
+                });
+            database.Appointments.Add(new Appointment {
+                PatientId = otherProfile.GetProperty("id").GetString()!,
+                AppointmentDateTimeUtc = start.AddMinutes(120),
+                ReasonForVisit = "Other patient private reason"
+            });
+            await database.SaveChangesAsync();
+        }
+        var overview = (await patient.GetFromJsonAsync<PatientOverviewResponse>("/api/appointments/my/overview"))!;
+        Assert.Equal(2, overview.Upcoming.Count);
+        Assert.Equal(2, overview.History.Count);
+        Assert.True(overview.Upcoming[0].AppointmentDateTimeUtc < overview.Upcoming[1].AppointmentDateTimeUtc);
+        Assert.True(overview.History[0].AppointmentDateTimeUtc > overview.History[1].AppointmentDateTimeUtc);
+        Assert.All(overview.Upcoming.Concat(overview.History), item => Assert.Null(item.ReasonForVisit));
+        var otherView = (await other.GetFromJsonAsync<PatientOverviewResponse>("/api/appointments/my/overview"))!;
+        Assert.Single(otherView.Upcoming);
+        Assert.Empty(otherView.History);
+        Assert.DoesNotContain(otherView.Upcoming[0].Id, overview.Upcoming.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Patient_cancellation_moves_visit_to_history_and_preserves_details()
+    {
+        using var factory = new AuthFactory(timeProvider: new TestClock());
+        using var patient = await Patient(factory);
+        var id = await BookId(patient);
+        Assert.Single((await patient.GetFromJsonAsync<PatientOverviewResponse>("/api/appointments/my/overview"))!.Upcoming);
+        Assert.Equal(HttpStatusCode.OK, (await Send(patient, HttpMethod.Patch, $"/api/appointments/{id}/cancel")).StatusCode);
+        var overview = (await patient.GetFromJsonAsync<PatientOverviewResponse>("/api/appointments/my/overview"))!;
+        Assert.Empty(overview.Upcoming);
+        var history = Assert.Single(overview.History);
+        Assert.Equal(id, history.Id);
+        Assert.Equal("Cancelled", history.Status);
+        Assert.Equal("Routine visit", history.ReasonForVisit);
+        Assert.NotNull(history.CancelledAtUtc);
+        Assert.False(history.CanCancel);
+    }
+
     [Fact]
     public async Task Booking_requires_patient_role_csrf_and_server_owned_patient_identity()
     {
         using var factory = new AuthFactory("Development", seedAdmin: true, timeProvider: new TestClock());
         using var anonymous = factory.Browser();
         Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/appointments/my")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/appointments/my/overview")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/availability?date=2030-01-07")).StatusCode);
         using var patient = await Patient(factory);
         Assert.Equal(HttpStatusCode.BadRequest, (await patient.PostAsJsonAsync("/api/appointments",
@@ -270,6 +364,7 @@ public sealed class BookingTests
         using var admin = factory.Browser();
         await Send(admin, HttpMethod.Post, "/api/auth/login", new { email = factory.AdminEmail, password = factory.AdminPassword });
         Assert.Equal(HttpStatusCode.Forbidden, (await admin.GetAsync("/api/appointments/my")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await admin.GetAsync("/api/appointments/my/overview")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await Book(admin)).StatusCode);
     }
 }
