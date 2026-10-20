@@ -12,7 +12,7 @@ export default function AccountPage() {
         <div><dt className="text-sm text-slate-500">Account role</dt><dd className="mt-1">{user.roles.join(', ')}</dd></div>
       </dl>
     </section>
-    <p className="text-sm text-slate-600">Your account is ready. Appointment booking will be added in Phase 3.</p>
+    <p className="text-sm text-slate-600">{user.roles.includes('Patient') ? 'Your account is ready. Use Book appointment to choose an available clinic time.' : 'Use Administration to verify your administrator access.'}</p>
   </>
 }
 

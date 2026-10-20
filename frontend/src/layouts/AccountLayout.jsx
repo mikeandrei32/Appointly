@@ -22,6 +22,10 @@ export default function AccountLayout() {
       <nav aria-label="Account navigation" className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-5 px-6 py-5">
         <Brand /><div className="flex flex-wrap items-center gap-5 text-sm font-medium">
           <Link to="/account" className="text-blue-700">My profile</Link>
+          {user.roles.includes('Patient') && <>
+            <Link to="/book" className="text-blue-700">Book appointment</Link>
+            <Link to="/appointments" className="text-blue-700">My appointments</Link>
+          </>}
           {user.roles.includes('Admin') && <Link to="/admin" className="text-blue-700">Administration</Link>}
           <Button onClick={signOut} disabled={busy}>{busy ? 'Signing out…' : 'Sign out'}</Button>
         </div>

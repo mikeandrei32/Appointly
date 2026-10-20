@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AccountPage from './pages/AccountPage'
 import AdminAccessPage from './pages/AdminAccessPage'
+import BookAppointmentPage from './pages/BookAppointmentPage'
+import MyAppointmentsPage from './pages/MyAppointmentsPage'
 
 export default function App() {
   return <BrowserRouter><AuthProvider><Routes>
@@ -16,6 +18,10 @@ export default function App() {
     <Route element={<RequireAuth />}>
       <Route element={<AccountLayout />}>
         <Route path="/account" element={<AccountPage />} />
+        <Route element={<RequireAuth role="Patient" />}>
+          <Route path="/book" element={<BookAppointmentPage />} />
+          <Route path="/appointments" element={<MyAppointmentsPage />} />
+        </Route>
         <Route element={<RequireAuth role="Admin" />}>
           <Route path="/admin" element={<AdminAccessPage />} />
         </Route>
