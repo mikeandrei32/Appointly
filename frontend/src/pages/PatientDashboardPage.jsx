@@ -10,7 +10,7 @@ export default function PatientDashboardPage() {
   const { data, error, reload } = useApiData('/appointments/my/overview')
   return <>
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <div><p className="text-sm font-semibold text-blue-700">Your patient dashboard</p>
+      <div className="min-w-0 flex-1 [overflow-wrap:anywhere]"><p className="text-sm font-semibold text-blue-700">Your patient dashboard</p>
         <h1 className="mt-2 break-words text-3xl font-bold">Welcome, {user.fullName}</h1></div>
       <Button onClick={reload}>Refresh</Button>
     </div>

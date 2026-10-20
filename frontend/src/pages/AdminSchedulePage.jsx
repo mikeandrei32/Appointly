@@ -53,7 +53,7 @@ export default function AdminSchedulePage() {
     {!blocked.data && !blocked.error && <p role="status">Loading blocked dates…</p>}
     {blocked.data?.length === 0 && <p className="text-sm text-slate-600">No blocked dates.</p>}
     <ul className="space-y-3">{blocked.data?.map((item) => <li key={item.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5">
-      <div><p className="font-semibold">{item.date}</p><p className="mt-1 break-words text-sm text-slate-600">{item.reason || 'Clinic unavailable'}</p></div>
+      <div className="min-w-0 flex-1 [overflow-wrap:anywhere]"><p className="font-semibold">{item.date}</p><p className="mt-1 break-words text-sm text-slate-600">{item.reason || 'Clinic unavailable'}</p></div>
       <button type="button" disabled={busy} onClick={() => { setSelected(item); setRemoveError('') }} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium">Unblock date</button>
     </li>)}</ul>
     <ConfirmDialog open={selected !== null} title="Unblock this date?" busy={busy} onClose={() => setSelected(null)}
