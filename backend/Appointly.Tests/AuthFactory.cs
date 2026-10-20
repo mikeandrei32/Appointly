@@ -7,10 +7,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 
 namespace Appointly.Tests;
 
-public sealed class AuthFactory(string environment = "Testing", bool seedAdmin = false) : WebApplicationFactory<Program>
+public sealed class AuthFactory(string environment = "Testing", bool seedAdmin = false,
+    TimeProvider? timeProvider = null) : WebApplicationFactory<Program>
 {
     private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"appointly-{Guid.NewGuid():N}.db");
     public string AdminEmail { get; } = $"admin-{Guid.NewGuid():N}@example.test";
@@ -29,6 +32,14 @@ public sealed class AuthFactory(string environment = "Testing", bool seedAdmin =
             }));
         builder.ConfigureServices(services =>
         {
+            if (timeProvider is not null)
+            {
+                services.RemoveAll<TimeProvider>();
+                services.AddSingleton(timeProvider);
+                // Booking tests move clinic time; keep the test client's cookie alive on real time.
+                services.Configure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme,
+                    options => options.TimeProvider = TimeProvider.System);
+            }
             services.RemoveAll<DbContextOptions<AppointlyDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<AppointlyDbContext>>();
             var connection = $"Data Source={databasePath};Pooling=False";
