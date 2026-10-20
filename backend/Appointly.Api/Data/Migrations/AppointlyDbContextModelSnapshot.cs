@@ -89,6 +89,73 @@ namespace Appointly.Api.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Appointly.Api.Models.Appointment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AppointmentDateTimeUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReasonForVisit")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId", "AppointmentDateTimeUtc");
+
+                    b.ToTable("Appointments", t =>
+                        {
+                            t.HasCheckConstraint("CK_Appointment_Duration", "\"DurationMinutes\" = 30");
+
+                            t.HasCheckConstraint("CK_Appointment_Status", "\"Status\" IN ('Pending', 'Confirmed', 'Completed', 'Cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("Appointly.Api.Models.BlockedDate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date")
+                        .IsUnique();
+
+                    b.ToTable("BlockedDates");
+                });
+
             modelBuilder.Entity("Appointly.Api.Models.ClinicSchedule", b =>
                 {
                     b.Property<int>("Id")
@@ -171,6 +238,22 @@ namespace Appointly.Api.Data.Migrations
                             IsOpen = false,
                             OpeningTime = new TimeOnly(9, 0, 0)
                         });
+                });
+
+            modelBuilder.Entity("Appointly.Api.Models.SlotReservation", b =>
+                {
+                    b.Property<DateTime>("SlotStartUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("SlotStartUtc");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
+
+                    b.ToTable("SlotReservations");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -301,6 +384,28 @@ namespace Appointly.Api.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Appointly.Api.Models.Appointment", b =>
+                {
+                    b.HasOne("Appointly.Api.Models.ApplicationUser", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Appointly.Api.Models.SlotReservation", b =>
+                {
+                    b.HasOne("Appointly.Api.Models.Appointment", "Appointment")
+                        .WithOne("Reservation")
+                        .HasForeignKey("Appointly.Api.Models.SlotReservation", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -350,6 +455,11 @@ namespace Appointly.Api.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Appointly.Api.Models.Appointment", b =>
+                {
+                    b.Navigation("Reservation");
                 });
 #pragma warning restore 612, 618
         }
