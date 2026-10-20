@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Brand from '../components/Brand'
 import Button from '../components/Button'
 import ErrorMessage from '../components/ErrorMessage'
+
+const navClass = ({ isActive }) => isActive ? 'font-bold text-blue-800 underline underline-offset-4' : 'text-blue-700 hover:underline'
 
 export default function AccountLayout() {
   const { user, logout } = useAuth()
@@ -21,15 +23,17 @@ export default function AccountLayout() {
     <header className="border-b border-slate-200 bg-white">
       <nav aria-label="Account navigation" className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-5 px-6 py-5">
         <Brand /><div className="flex flex-wrap items-center gap-5 text-sm font-medium">
-          <Link to="/account" className="text-blue-700">My profile</Link>
+          <NavLink to="/account" className={navClass}>My profile</NavLink>
           {user.roles.includes('Patient') && <>
-            <Link to="/book" className="text-blue-700">Book appointment</Link>
-            <Link to="/appointments" className="text-blue-700">My appointments</Link>
+            <NavLink to="/dashboard" className={navClass}>Dashboard</NavLink>
+            <NavLink to="/book" className={navClass}>Book appointment</NavLink>
+            <NavLink end to="/appointments" className={navClass}>Upcoming</NavLink>
+            <NavLink to="/appointments/history" className={navClass}>History</NavLink>
           </>}
           {user.roles.includes('Admin') && <>
-            <Link to="/admin" className="text-blue-700">Overview</Link>
-            <Link to="/admin/appointments" className="text-blue-700">Appointments</Link>
-            <Link to="/admin/schedule" className="text-blue-700">Availability</Link>
+            <NavLink end to="/admin" className={navClass}>Overview</NavLink>
+            <NavLink to="/admin/appointments" className={navClass}>Appointments</NavLink>
+            <NavLink to="/admin/schedule" className={navClass}>Availability</NavLink>
           </>}
           <Button onClick={signOut} disabled={busy}>{busy ? 'Signing out…' : 'Sign out'}</Button>
         </div>

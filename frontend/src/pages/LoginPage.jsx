@@ -12,7 +12,7 @@ export default function LoginPage() {
   const location = useLocation()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  if (user) return <Navigate to={user.roles.includes('Admin') ? '/admin' : '/account'} replace />
+  if (user) return <Navigate to={user.roles.includes('Admin') ? '/admin' : '/dashboard'} replace />
   async function submit(event) {
     event.preventDefault()
     setBusy(true)
@@ -20,7 +20,7 @@ export default function LoginPage() {
     const values = Object.fromEntries(new FormData(event.currentTarget))
     try {
       const account = await login(values)
-      navigate(account.roles.includes('Admin') ? '/admin' : '/account', { replace: true })
+      navigate(account.roles.includes('Admin') ? '/admin' : '/dashboard', { replace: true })
     } catch (failure) { setError(failure.message) }
     finally { setBusy(false) }
   }

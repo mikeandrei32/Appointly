@@ -11,6 +11,7 @@ import AdminAppointmentsPage from './pages/AdminAppointmentsPage'
 import AdminSchedulePage from './pages/AdminSchedulePage'
 import BookAppointmentPage from './pages/BookAppointmentPage'
 import MyAppointmentsPage from './pages/MyAppointmentsPage'
+import PatientDashboardPage from './pages/PatientDashboardPage'
 
 export default function App() {
   return <BrowserRouter><AuthProvider><Routes>
@@ -21,8 +22,10 @@ export default function App() {
       <Route element={<AccountLayout />}>
         <Route path="/account" element={<AccountPage />} />
         <Route element={<RequireAuth role="Patient" />}>
+          <Route path="/dashboard" element={<PatientDashboardPage />} />
           <Route path="/book" element={<BookAppointmentPage />} />
-          <Route path="/appointments" element={<MyAppointmentsPage />} />
+          <Route path="/appointments" element={<MyAppointmentsPage key="upcoming" />} />
+          <Route path="/appointments/history" element={<MyAppointmentsPage key="history" history />} />
         </Route>
         <Route element={<RequireAuth role="Admin" />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
