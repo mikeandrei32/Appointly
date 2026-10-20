@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef } from 'react'
 import Button from './Button'
 
-export default function ConfirmDialog({ open, title, children, busy, onClose, onConfirm, confirmLabel }) {
+export default function ConfirmDialog({ open, title, children, busy, onClose, onConfirm, confirmLabel,
+  dismissLabel = 'Keep appointment', busyLabel = 'Cancelling…' }) {
   const dialog = useRef(null)
   const titleId = useId()
   useEffect(() => {
@@ -16,8 +17,8 @@ export default function ConfirmDialog({ open, title, children, busy, onClose, on
     <h2 id={titleId} className="text-xl font-semibold">{title}</h2>
     <div className="my-5 space-y-3 text-sm leading-6 text-slate-600">{children}</div>
     <div className="flex flex-wrap justify-end gap-3">
-      <button type="button" disabled={busy} onClick={onClose} className="rounded-xl border border-slate-300 px-4 py-3 font-medium disabled:opacity-50">Keep appointment</button>
-      <Button type="button" disabled={busy} onClick={onConfirm}>{busy ? 'Cancelling…' : confirmLabel}</Button>
+      <button type="button" disabled={busy} onClick={onClose} className="rounded-xl border border-slate-300 px-4 py-3 font-medium disabled:opacity-50">{dismissLabel}</button>
+      <Button type="button" disabled={busy} onClick={onConfirm}>{busy ? busyLabel : confirmLabel}</Button>
     </div>
   </dialog>
 }
