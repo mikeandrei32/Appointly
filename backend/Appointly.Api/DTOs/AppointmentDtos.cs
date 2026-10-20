@@ -16,5 +16,8 @@ public sealed record AppointmentResponse(int Id, DateTime AppointmentDateTimeUtc
     DateTime? CancelledAtUtc, bool CanCancel);
 
 public sealed record AvailableSlot(DateTime StartUtc, string LocalTime);
+public sealed record PatientOverviewResponse(
+    IReadOnlyList<AppointmentResponse> Upcoming,
+    IReadOnlyList<AppointmentResponse> History);
 public sealed record AvailabilityResponse(string Date, string Timezone, int DurationMinutes,
     IReadOnlyList<AvailableSlot> Slots);

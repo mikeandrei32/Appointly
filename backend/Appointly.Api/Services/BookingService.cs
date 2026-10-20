@@ -44,6 +44,28 @@ public sealed class BookingService(AppointlyDbContext database, TimeProvider clo
         return items.Select(ToResponse).ToList();
     }
 
+    public async Task<PatientOverviewResponse> GetOverviewAsync(string patientId, CancellationToken cancellationToken)
+    {
+        var now = clock.GetUtcNow().UtcDateTime;
+        // Always scope to the signed-in patient before loading any records.
+        var items = await database.Appointments.AsNoTracking()
+            .Where(item => item.PatientId == patientId).ToListAsync(cancellationToken);
+        var upcoming = new List<AppointmentResponse>();
+        var history = new List<AppointmentResponse>();
+        foreach (var item in items)
+        {
+            var response = ToResponse(item, now);
+            // Include ongoing visits until their end, without inventing a new status.
+            if (IsActive(item.Status) && item.AppointmentDateTimeUtc.AddMinutes(item.DurationMinutes) > now)
+                upcoming.Add(response);
+            else
+                history.Add(response);
+        }
+        return new(
+            upcoming.OrderBy(item => item.AppointmentDateTimeUtc).ThenBy(item => item.Id).ToList(),
+            history.OrderByDescending(item => item.AppointmentDateTimeUtc).ThenByDescending(item => item.Id).ToList());
+    }
+
     public async Task<AppointmentResponse> GetAsync(int id, string patientId, CancellationToken cancellationToken)
     {
         var item = await database.Appointments.AsNoTracking()
@@ -116,10 +138,12 @@ public sealed class BookingService(AppointlyDbContext database, TimeProvider clo
     private static bool IsActive(AppointmentStatus status) =>
         status is AppointmentStatus.Pending or AppointmentStatus.Confirmed;
 
-    private AppointmentResponse ToResponse(Appointment item) => new(item.Id,
+    private AppointmentResponse ToResponse(Appointment item) => ToResponse(item, clock.GetUtcNow().UtcDateTime);
+
+    private static AppointmentResponse ToResponse(Appointment item, DateTime now) => new(item.Id,
         item.AppointmentDateTimeUtc, item.DurationMinutes, item.Status.ToString(), item.ReasonForVisit,
         item.CreatedAtUtc, item.CancelledAtUtc,
-        IsActive(item.Status) && item.AppointmentDateTimeUtc > clock.GetUtcNow().UtcDateTime);
+        IsActive(item.Status) && item.AppointmentDateTimeUtc > now);
 
     private static AvailabilityResponse Availability(DateOnly date, List<AvailableSlot> slots) =>
         new(date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), ClinicTime.TimezoneId,

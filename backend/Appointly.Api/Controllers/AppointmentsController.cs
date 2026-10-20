@@ -23,6 +23,10 @@ public sealed class AppointmentsController(BookingService bookings) : Controller
     public async Task<IActionResult> Get(int id, CancellationToken cancellationToken) =>
         Ok(await bookings.GetAsync(id, PatientId, cancellationToken));
 
+    [HttpGet("my/overview")]
+    public async Task<IActionResult> Overview(CancellationToken cancellationToken) =>
+        Ok(await bookings.GetOverviewAsync(PatientId, cancellationToken));
+
     [HttpPost]
     public async Task<IActionResult> Book(BookAppointmentRequest request, CancellationToken cancellationToken)
     {
