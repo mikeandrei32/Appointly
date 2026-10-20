@@ -4,7 +4,7 @@ A clinic appointment booking portfolio project using React (JavaScript), ASP.NET
 
 ## Current status
 
-Phases 1 and 2 are implemented: frontend foundation, database-backed health endpoint, migrations, development OpenAPI, patient registration/login/logout, profile, Patient/Admin authorization, CSRF protection, and development-only admin setup. Booking, appointment management, and dashboards are not implemented yet. This is not a production medical records system.
+Phases 1-3 are implemented: frontend foundation, database-backed health endpoint, migrations, development OpenAPI, patient registration/login/logout, profile, Patient/Admin authorization, CSRF protection, development-only admin setup, appointment availability, booking, and patient cancellation. Administrator appointment management and dashboards are not implemented yet. This is not a production medical records system.
 
 ## Prerequisites
 
@@ -73,7 +73,8 @@ The HTTPS profile also retains HTTP for the local Vite proxy. Production enables
 
 - Program.cs registers controllers, OpenAPI, error handling, optional CORS, and the SQLite database context.
 - ClinicSchedule is a class representing one weekday's hours. Its properties hold data that EF Core persists.
-- AppointlyDbContext inherits DbContext, configures the unique weekday index, and seeds schedule defaults through migrations.
+- AppointlyDbContext inherits IdentityDbContext<ApplicationUser>, configures clinic and booking tables, and seeds schedule defaults through migrations.
+- BookingService enforces clinic hours, Manila time, ownership, and cancellation rules. SQLite transactions and a unique slot reservation prevent double booking.
 - HealthController receives AppointlyDbContext and ILogger through constructor dependency injection. ASP.NET Core supplies them per request.
 - HealthResponse is an immutable response DTO. The API does not expose database entities.
 - The health endpoint queries a migrated table, returning 503 with safe ProblemDetails if the schema or database is unavailable.
@@ -84,14 +85,16 @@ The HTTPS profile also retains HTTP for the local Vite proxy. Production enables
 
 ```powershell
 dotnet build
+dotnet test
 npm --prefix frontend run lint
+npm --prefix frontend test
 npm --prefix frontend run build
 Invoke-RestMethod http://localhost:5080/api/health
 Invoke-RestMethod http://localhost:5173/api/health
 Invoke-RestMethod http://localhost:5173/openapi/v1.json
 ```
 
-Verified during Phase 1: migration generation/application, backend build with zero warnings/errors, frontend lint/build, HTTP 200 for the frontend, healthy responses directly and through the proxy, and development OpenAPI containing /api/health. Browser rendering and the connected status were inspected. Phase 2 adds ten SQLite-backed xUnit integration cases. A full mobile/device matrix has not yet been verified.
+Phase 3 verification: 30 SQLite-backed integration cases pass (including the ten authentication cases), frontend lint/build pass, and two frontend timezone tests pass. The booking migration is checked through real SQLite migration application. No development servers were started for this phase; browser interaction and the mobile/device matrix remain manual checks. Earlier phase browser checks are documented in their guides.
 
 ## Migrations
 
@@ -108,13 +111,15 @@ Commit migration source files, not the local database. The application does not 
 
 See [Phase 2 guide](docs/phase-2.md) for API routes, development admin setup, tests, manual verification, and class responsibilities.
 
+See [Phase 3 guide](docs/phase-3.md) for booking rules, transaction behavior, changed files, and manual booking/cancellation tests.
+
 ## Roadmap
 
 2. Complete: Identity, Patient/Admin roles, CSRF, authentication UI, and development admin configuration.
-3. Appointment booking, availability, cancellation, unique slot reservations, and concurrency tests.
+3. Complete: appointment booking, availability, cancellation, unique slot reservations, and concurrency tests.
 4. Administration and schedule conflict handling.
 5. Patient dashboard and history.
 6. SQLite-backed integration tests and responsive polish.
 7. Portfolio documentation and screenshots of completed features.
 
-No deployment or completed booking functionality is claimed. Never enter real patient data into this demonstration.
+The application has not been deployed. Never enter real patient data into this demonstration.
