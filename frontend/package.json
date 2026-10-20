@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "test": "node --test src/utils/*.test.js",
     "test:browser": "npm run build && playwright test",
+    "screenshots": "npm run build && playwright test --config playwright.screenshots.config.js",
     "preview": "vite preview"
   },
   "dependencies": {
