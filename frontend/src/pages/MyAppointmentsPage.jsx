@@ -17,13 +17,15 @@ export default function MyAppointmentsPage({ history = false }) {
   const [cancelError, setCancelError] = useState('')
   const [notice, setNotice] = useState(location.state?.booked ? 'Appointment booked. It is awaiting confirmation.' : '')
 
-  function close() { setSelected(null); reload() }
+  // Preserve the trigger button on ordinary dismissal so dialog focus can return.
+  function close() { setSelected(null); if (cancelError) reload() }
   async function cancel() {
     if (busy || !selected) return
     setBusy(true); setCancelError('')
     try {
       await cancelAppointment(selected.id)
-      close()
+      setSelected(null)
+      reload()
       setNotice('Appointment cancelled. You can find it in your history.')
     } catch (failure) { setCancelError(failure.message) }
     finally { setBusy(false) }

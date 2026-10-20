@@ -22,14 +22,15 @@ export default function AdminAppointmentsPage() {
     setFilters(Object.fromEntries(new FormData(event.currentTarget)))
     setPage(1); reload()
   }
-  function close() { setAction(null); reload() }
+  function close() { setAction(null); if (actionError) reload() }
   async function confirm() {
     if (!action || busy) return
     setBusy(true); setActionError('')
     try {
       await changeAppointmentStatus(action.item.id, action.status, action.item.status)
       setNotice(`Appointment #${action.item.id} is now ${action.status}.`)
-      close()
+      setAction(null)
+      reload()
     } catch (failure) { setActionError(failure.message) }
     finally { setBusy(false) }
   }
