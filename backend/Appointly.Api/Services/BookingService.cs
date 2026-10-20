@@ -3,12 +3,11 @@ using System.Text.RegularExpressions;
 using Appointly.Api.Data;
 using Appointly.Api.DTOs;
 using Appointly.Api.Models;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace Appointly.Api.Services;
 
-public sealed class BookingService(AppointlyDbContext database, TimeProvider clock)
+public sealed class BookingService(AppointlyDbContext database, TimeProvider clock, ScheduleWriter writer)
 {
     public async Task<AvailabilityResponse> GetAvailabilityAsync(DateOnly date, CancellationToken cancellationToken)
     {
@@ -65,7 +64,7 @@ public sealed class BookingService(AppointlyDbContext database, TimeProvider clo
         var date = DateOnly.FromDateTime(local);
         var time = TimeOnly.FromDateTime(local);
 
-        return await WriteAsync(async () =>
+        return await writer.WriteAsync(async () =>
         {
             var now = clock.GetUtcNow().UtcDateTime;
             if (start <= now) throw new BookingException(400, "Appointments must be in the future.");
@@ -93,7 +92,7 @@ public sealed class BookingService(AppointlyDbContext database, TimeProvider clo
 
     public async Task<AppointmentResponse> CancelAsync(int id, string patientId, CancellationToken cancellationToken)
     {
-        return await WriteAsync(async () =>
+        return await writer.WriteAsync(async () =>
         {
             var appointment = await database.Appointments.Include(item => item.Reservation)
                 .SingleOrDefaultAsync(item => item.Id == id && item.PatientId == patientId, cancellationToken)
@@ -108,35 +107,6 @@ public sealed class BookingService(AppointlyDbContext database, TimeProvider clo
             await database.SaveChangesAsync(cancellationToken);
             return ToResponse(appointment);
         }, cancellationToken);
-    }
-
-    private async Task<T> WriteAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await database.Database.OpenConnectionAsync(cancellationToken);
-            var connection = (SqliteConnection)database.Database.GetDbConnection();
-            // Acquire SQLite's write lock before reading rules. All future schedule mutations
-            // must use the same immediate-transaction policy to coordinate with booking.
-            using var transaction = connection.BeginTransaction(deferred: false);
-            await using var enlisted = await database.Database.UseTransactionAsync(transaction, cancellationToken);
-            var result = await action();
-            await transaction.CommitAsync(cancellationToken);
-            return result;
-        }
-        catch (DbUpdateException exception) when (exception.InnerException is SqliteException { SqliteExtendedErrorCode: 1555 or 2067 })
-        {
-            throw new BookingException(409, "This slot was just reserved. Choose another time.");
-        }
-        catch (SqliteException exception) when (exception.SqliteErrorCode is 5 or 6)
-        {
-            throw new BookingException(409, "The schedule is busy. Refresh availability and try again.");
-        }
-        catch (DbUpdateException exception) when (exception.InnerException is SqliteException { SqliteErrorCode: 5 or 6 })
-        {
-            throw new BookingException(409, "The schedule is busy. Refresh availability and try again.");
-        }
-        finally { await database.Database.CloseConnectionAsync(); }
     }
 
     private static bool FitsSchedule(ClinicSchedule schedule, TimeOnly time) =>

@@ -21,6 +21,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<BookingService>();
+builder.Services.AddScoped<ScheduleWriter>();
+builder.Services.AddScoped<AdminService>();
 builder.Services.AddDbContext<AppointlyDbContext>(options => options.UseSqlite(
     builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("DefaultConnection must be configured.")));
