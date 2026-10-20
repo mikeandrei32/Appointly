@@ -6,7 +6,9 @@ import FoundationPage from './pages/FoundationPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AccountPage from './pages/AccountPage'
-import AdminAccessPage from './pages/AdminAccessPage'
+import AdminDashboardPage from './pages/AdminDashboardPage'
+import AdminAppointmentsPage from './pages/AdminAppointmentsPage'
+import AdminSchedulePage from './pages/AdminSchedulePage'
 import BookAppointmentPage from './pages/BookAppointmentPage'
 import MyAppointmentsPage from './pages/MyAppointmentsPage'
 
@@ -23,7 +25,9 @@ export default function App() {
           <Route path="/appointments" element={<MyAppointmentsPage />} />
         </Route>
         <Route element={<RequireAuth role="Admin" />}>
-          <Route path="/admin" element={<AdminAccessPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
+          <Route path="/admin/schedule" element={<AdminSchedulePage />} />
         </Route>
       </Route>
     </Route>

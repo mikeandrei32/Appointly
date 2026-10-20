@@ -26,7 +26,11 @@ export default function AccountLayout() {
             <Link to="/book" className="text-blue-700">Book appointment</Link>
             <Link to="/appointments" className="text-blue-700">My appointments</Link>
           </>}
-          {user.roles.includes('Admin') && <Link to="/admin" className="text-blue-700">Administration</Link>}
+          {user.roles.includes('Admin') && <>
+            <Link to="/admin" className="text-blue-700">Overview</Link>
+            <Link to="/admin/appointments" className="text-blue-700">Appointments</Link>
+            <Link to="/admin/schedule" className="text-blue-700">Availability</Link>
+          </>}
           <Button onClick={signOut} disabled={busy}>{busy ? 'Signing out…' : 'Sign out'}</Button>
         </div>
       </nav>
