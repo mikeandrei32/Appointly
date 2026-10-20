@@ -4,7 +4,7 @@ A clinic appointment booking portfolio project using React (JavaScript), ASP.NET
 
 ## Current status
 
-Phases 1-3 are implemented: frontend foundation, database-backed health endpoint, migrations, development OpenAPI, patient registration/login/logout, profile, Patient/Admin authorization, CSRF protection, development-only admin setup, appointment availability, booking, and patient cancellation. Administrator appointment management and dashboards are not implemented yet. This is not a production medical records system.
+Phases 1-4 are implemented: frontend foundation, database-backed health endpoint, migrations, development OpenAPI, patient registration/login/logout, profile, Patient/Admin authorization, CSRF protection, development-only admin setup, appointment availability, booking, patient cancellation, administrator dashboard, appointment management, weekly hours, and blocked dates. The patient dashboard and history remain Phase 5. This is not a production medical records system.
 
 ## Prerequisites
 
@@ -94,7 +94,7 @@ Invoke-RestMethod http://localhost:5173/api/health
 Invoke-RestMethod http://localhost:5173/openapi/v1.json
 ```
 
-Phase 3 verification: 30 SQLite-backed integration cases pass (including the ten authentication cases), frontend lint/build pass, and two frontend timezone tests pass. The booking migration is checked through real SQLite migration application. No development servers were started for this phase; browser interaction and the mobile/device matrix remain manual checks. Earlier phase browser checks are documented in their guides.
+Phase 4 verification: 59 SQLite-backed integration cases pass (including all 30 previous-phase cases), frontend lint/build pass, and two frontend timezone tests pass. Backend checks use `dotnet test --artifacts-path "$env:TEMP/appointly-phase4-checks"` to avoid locking the executable of an already running API. No development servers were started or stopped; browser interaction and the mobile/device matrix remain manual checks. Phase 4 requires no new database migration.
 
 ## Migrations
 
@@ -113,11 +113,13 @@ See [Phase 2 guide](docs/phase-2.md) for API routes, development admin setup, te
 
 See [Phase 3 guide](docs/phase-3.md) for booking rules, transaction behavior, changed files, and manual booking/cancellation tests.
 
+See [Phase 4 guide](docs/phase-4.md) for administrator management, conflict rules, changed files, and manual verification.
+
 ## Roadmap
 
 2. Complete: Identity, Patient/Admin roles, CSRF, authentication UI, and development admin configuration.
 3. Complete: appointment booking, availability, cancellation, unique slot reservations, and concurrency tests.
-4. Administration and schedule conflict handling.
+4. Complete: administrator dashboard, appointment status management, weekly hours, blocked dates, and schedule conflict handling.
 5. Patient dashboard and history.
 6. SQLite-backed integration tests and responsive polish.
 7. Portfolio documentation and screenshots of completed features.
