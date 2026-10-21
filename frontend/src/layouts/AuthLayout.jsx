@@ -8,6 +8,5 @@ export default function AuthLayout({ title, description, children }) {
       <p className="mb-7 mt-2 text-sm leading-6 text-slate-600">{description}</p>
       {children}
     </section>
-    <p className="mt-6 text-center text-xs text-slate-500">Portfolio demonstration. Use fictional information only.</p>
   </main>
 }
