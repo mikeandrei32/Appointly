@@ -1,70 +1,99 @@
-import { useEffect, useState } from 'react'
-import { ArrowUpRight, CheckCircle2, RefreshCw } from 'lucide-react'
-import Brand from '../components/Brand'
+import { ArrowRight, CalendarDays, CalendarCheck2, Clock3, Heart, MoveUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import Brand from '../components/Brand'
 import { useAuth } from '../hooks/useAuth'
-import { getHealth } from '../services/health'
+
+const benefits = [
+  { icon: CalendarDays, title: 'A time that suits you', text: 'Choose from available clinic appointments and plan ahead.' },
+  { icon: CalendarCheck2, title: 'Your visits, in one place', text: 'Keep your upcoming appointments and past visits close at hand.' },
+  { icon: Clock3, title: 'Room for a change of plans', text: 'Cancel an upcoming visit when you need to make other arrangements.' },
+]
 
 export default function FoundationPage() {
-  const { user } = useAuth()
-  const [attempt, setAttempt] = useState(0)
-  const [health, setHealth] = useState(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    const controller = new AbortController()
-    getHealth(controller.signal).then(setHealth).catch((failure) => {
-      if (failure.name !== 'AbortError') setError(failure.message)
-    })
-    return () => controller.abort()
-  }, [attempt])
-
-  function retry() {
-    setHealth(null)
-    setError('')
-    setAttempt((value) => value + 1)
-  }
+  const { user, loading } = useAuth()
+  const isAdmin = user?.roles.includes('Admin')
+  const accountPath = isAdmin ? '/admin' : '/dashboard'
+  const primaryPath = user ? (isAdmin ? '/admin' : '/book') : '/register'
+  const primaryLabel = isAdmin ? 'Manage appointments' : 'Book a visit'
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
+    <div className="min-h-screen bg-[#fafbf8] text-slate-900">
+      <header className="border-b border-slate-200/70 bg-white">
+        <nav aria-label="Main navigation" className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6">
           <Brand />
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Development · Phase 6</span>
-        </div>
+          {!loading && <Link to={user ? accountPath : '/login'}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold transition hover:border-blue-600 hover:text-blue-700">
+            {user ? 'My account' : 'Sign in'} <MoveUpRight size={15} aria-hidden="true" />
+          </Link>}
+        </nav>
       </header>
-      <main className="mx-auto max-w-6xl px-6 py-14 md:py-24">
-        <div className="grid items-start gap-12 lg:grid-cols-2">
-          <section>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-blue-700">Clinic appointment booking</p>
-            <h1 className="max-w-xl text-4xl font-bold leading-tight tracking-tight md:text-5xl">A simpler way to plan your clinic visit.</h1>
-            <p className="mt-6 max-w-lg text-lg leading-8 text-slate-600">Appointly is taking shape. The application foundation connects this React interface to an ASP.NET Core API and a SQLite database.</p>
-            <p className="mt-4 text-sm leading-6 text-slate-500">Plan your next visit from your patient dashboard and review your appointment history. Administrators can manage appointments, weekly hours, and blocked dates.</p>
-            <div className="mt-6 flex flex-wrap gap-4">{user ? <Link to={user.roles.includes('Admin') ? '/admin' : '/dashboard'} className="font-semibold text-blue-700 underline">Go to my account</Link> : <><Link to="/register" className="font-semibold text-blue-700 underline">Create an account</Link><Link to="/login" className="font-semibold text-blue-700 underline">Sign in</Link></>}</div><a href="/openapi/v1.json" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700">View API specification <ArrowUpRight size={18} aria-hidden="true" /></a>
-          </section>
-          <section aria-labelledby="status-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <h2 id="status-heading" className="text-xl font-semibold">Application status</h2>
-              <button type="button" onClick={retry} aria-label="Refresh application status" className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"><RefreshCw size={18} aria-hidden="true" /></button>
+
+      <main>
+        <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 md:py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-16" aria-labelledby="welcome-heading">
+          <div className="min-w-0">
+            <p className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+              <span className="h-2 w-2 rounded-full bg-blue-600" aria-hidden="true" /> A little planning. More peace of mind.
+            </p>
+            <h1 id="welcome-heading" className="max-w-xl text-5xl font-semibold leading-[1.08] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
+              Your next visit.<br /><span className="text-blue-600">Made simple.</span>
+            </h1>
+            <p className="mt-7 max-w-md text-lg leading-8 text-slate-600">
+              Make time for your wellbeing. Find a clinic appointment that fits your day and keep your visits organised.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-5">
+              {!loading && <Link to={primaryPath}
+                className="inline-flex items-center justify-center gap-4 rounded-full bg-blue-600 px-7 py-4 font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700">
+                {primaryLabel} <ArrowRight size={19} aria-hidden="true" />
+              </Link>}
+              {!user && !loading && <span className="text-sm text-slate-500">New here? Start with an account.</span>}
             </div>
-            <div role="status" aria-live="polite" className="mt-6">
-              {error ? <p className="rounded-xl bg-red-50 p-4 text-sm leading-6 text-red-800">{error}</p> : health ? (
-                <div className="flex gap-3 rounded-xl bg-emerald-50 p-4 text-emerald-800">
-                  <CheckCircle2 className="shrink-0" size={22} aria-hidden="true" />
-                  <div><p className="font-semibold">API and database connected</p><p className="mt-1 text-sm">Live response from /api/health</p></div>
-                </div>
-              ) : <p className="rounded-xl bg-slate-50 p-4 text-slate-600">Checking API and database…</p>}
+            <div className="mt-10 flex items-center gap-3 border-t border-slate-200 pt-6 text-sm text-slate-600">
+              <Heart size={18} className="shrink-0 text-blue-600" aria-hidden="true" />
+              A calmer way to plan your clinic visit.
             </div>
-            <dl className="mt-6 divide-y divide-slate-100 text-sm">
-              <div className="flex justify-between gap-3 py-4"><dt className="text-slate-500">Frontend</dt><dd className="font-medium">React + Vite</dd></div>
-              <div className="flex justify-between gap-3 py-4"><dt className="text-slate-500">Backend</dt><dd className="font-medium">ASP.NET Core</dd></div>
-              <div className="flex justify-between gap-3 py-4"><dt className="text-slate-500">Clinic timezone</dt><dd className="font-medium">{health?.clinicTimezone || 'Asia/Manila'}</dd></div>
-            </dl>
-            <p className="mt-4 text-xs text-slate-500">Booking, cancellation, and administrator clinic management are ready.</p>
-          </section>
-        </div>
+          </div>
+
+          <div className="relative min-w-0 overflow-hidden rounded-[2rem] bg-[#e8eefb] p-7 sm:p-10">
+            <div className="absolute -right-16 -top-16 h-60 w-60 rounded-full border-[40px] border-white/35" aria-hidden="true" />
+            <div className="relative flex items-center justify-between">
+              <span className="rounded-full bg-white/80 px-4 py-2 text-xs font-semibold tracking-wide text-blue-900">A moment for you</span>
+              <Heart size={23} className="text-blue-700" strokeWidth={1.5} aria-hidden="true" />
+            </div>
+            <div aria-hidden="true" className="relative mx-auto mb-9 mt-10 max-w-72 rotate-[-4deg] rounded-2xl bg-white p-6 shadow-xl shadow-blue-950/10">
+              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="h-2.5 w-20 rounded-full bg-blue-100" />
+                <CalendarDays size={21} className="text-blue-600" />
+              </div>
+              <div className="grid grid-cols-5 gap-3">
+                {Array.from({ length: 15 }, (_, index) => <div key={index}
+                  className={`flex aspect-square items-center justify-center rounded-lg ${index === 7 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-slate-50'}`}>
+                  {index === 7 ? <Heart size={20} fill="currentColor" /> : <span className="h-1.5 w-1.5 rounded-full bg-slate-200" />}
+                </div>)}
+              </div>
+              <div className="mt-5 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-300" /><span className="h-2 w-24 rounded-full bg-slate-100" /></div>
+            </div>
+            <div className="relative border-t border-blue-200/70 pt-6">
+              <h2 className="text-2xl font-semibold tracking-tight text-blue-950">Less to organise.<br />More time for you.</h2>
+              <p className="mt-3 max-w-xs text-sm leading-6 text-slate-600">A place for your appointments, so you can get on with your day.</p>
+            </div>
+          </div>
+        </section>
+
+        <section aria-label="Plan your visit with Appointly" className="border-y border-slate-200/70 bg-white">
+          <div className="mx-auto grid max-w-6xl gap-9 px-6 py-10 md:grid-cols-3 md:gap-10 md:py-12">
+            {benefits.map(({ icon: Icon, title, text }) => <article key={title}>
+              <Icon size={23} strokeWidth={1.6} className="mb-4 text-blue-600" aria-hidden="true" />
+              <h2 className="text-base font-semibold">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">{text}</p>
+            </article>)}
+          </div>
+        </section>
       </main>
-      <footer className="mx-auto max-w-6xl border-t border-slate-200 px-6 py-6 text-sm text-slate-500">Appointly · Portfolio demonstration · No real patient data</footer>
+
+      <footer className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-7 text-xs text-slate-500">
+        <p>Appointly · Make time for your wellbeing.</p>
+        <p>Demo only. Please use fictional information.</p>
+      </footer>
     </div>
   )
 }
