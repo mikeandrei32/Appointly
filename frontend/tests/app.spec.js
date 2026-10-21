@@ -241,3 +241,19 @@ test('long patient content fits dashboard profile and history', async ({ page })
     await fitsViewport(page)
   }
 })
+
+for (const role of ['visitor', 'patient', 'admin']) {
+  test(`homepage offers the right next step for a ${role}`, async ({ page }, testInfo) => {
+    await mockApi(page, { user: role === 'visitor' ? null : role === 'admin' ? admin : patient })
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: 'Your next visit. Made simple.' })).toBeVisible()
+    const primary = page.getByRole('link', { name: role === 'admin' ? 'Manage appointments' : 'Book a visit' })
+    await expect(primary).toHaveAttribute('href', role === 'visitor' ? '/register' : role === 'admin' ? '/admin' : '/book')
+    await expect(page.getByRole('link', { name: role === 'visitor' ? 'Sign in' : 'My account' })).toHaveAttribute(
+      'href', role === 'visitor' ? '/login' : role === 'admin' ? '/admin' : '/dashboard')
+    await fitsViewport(page)
+    if (role === 'visitor') await page.screenshot({ path: testInfo.outputPath('homepage.png'), fullPage: true })
+    await primary.click()
+    await expect(page).toHaveURL(new RegExp(`${role === 'visitor' ? '/register' : role === 'admin' ? '/admin' : '/book'}$`))
+  })
+}
