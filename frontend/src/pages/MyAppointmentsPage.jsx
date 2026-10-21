@@ -39,9 +39,6 @@ export default function MyAppointmentsPage({ history = false }) {
       <Link to={history ? '/appointments' : '/appointments/history'} className="underline">{history ? 'Upcoming visits' : 'View history'}</Link>
       <Link to="/book" className="underline">Book appointment</Link>
     </div>
-    <p className="text-sm text-slate-600">{history
-      ? 'Past visits and all completed or cancelled appointments, newest first. Past appointments keep their recorded status until the clinic updates it.'
-      : 'Pending and Confirmed visits, soonest first, including visits currently in progress. Only future visits can be cancelled.'} All times use Asia/Manila.</p>
     {notice && <p role="status" className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{notice}</p>}
     <ErrorMessage>{error}</ErrorMessage>
     {error && <Button onClick={reload}>Retry</Button>}

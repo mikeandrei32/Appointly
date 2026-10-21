@@ -33,7 +33,6 @@ export default function PatientDashboardPage() {
         <Link to="/appointments" className="inline-block font-semibold text-blue-700 underline">View upcoming visits and cancellation options</Link>
       </section>
       <Link to="/appointments/history" className="inline-block font-semibold text-blue-700 underline">View appointment history</Link>
-      <p className="text-sm text-slate-500">Times use Asia/Manila. Refresh to see the latest clinic updates. Only future Pending or Confirmed visits can be cancelled.</p>
     </>}
   </>
 }
